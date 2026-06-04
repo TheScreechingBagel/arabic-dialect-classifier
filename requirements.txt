@@ -1,0 +1,15 @@
+datasets
+pandas
+numpy
+scikit-learn
+joblib
+pyyaml
+mlflow
+optuna
+fastapi
+uvicorn
+pydantic
+dvc
+dvc-gdrive
+matplotlib
+jupyter

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Arabic Dialect Classifier</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Pinyon+Script&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 20px;
+      line-height: 1.5;
+    }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 12px;
+    }
+
+    .header-cat {
+      width: 96px;
+      height: 96px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 1px solid #ccc;
+    }
+
+    h1 {
+      font-family: "Pinyon Script", cursive;
+      font-size: 56px;
+      font-weight: 400;
+      margin: 0;
+    }
+
+    textarea {
+      width: 100%;
+      height: 150px;
+      font-size: 20px;
+      padding: 12px;
+      direction: rtl;
+      box-sizing: border-box;
+    }
+
+    button {
+      margin-top: 12px;
+      padding: 10px 18px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    .result {
+      margin-top: 24px;
+      padding: 18px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+
+    .dialect {
+      font-size: 28px;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    .confidence {
+      font-size: 18px;
+      margin-bottom: 18px;
+    }
+
+    .bar-wrapper {
+      margin: 12px 0;
+    }
+
+    .bar-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-weight: bold;
+    }
+
+    .bar-bg {
+      width: 100%;
+      height: 22px;
+      background: #eee;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      background: #4b6cff;
+      width: 0%;
+    }
+
+    .examples {
+      margin-top: 20px;
+    }
+
+    .example-btn {
+      margin: 4px;
+      padding: 7px 10px;
+      font-size: 14px;
+    }
+
+    .small {
+      color: #555;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header-row">
+    <img
+      class="header-cat"
+      src="/resources/cat-and-rose.jpg"
+      alt="Cat and rose"
+    />
+    <h1>Arabic Dialect Classifier</h1>
+  </div>
+
+  <p>
+    Enter Arabic text. The model predicts the dialect and returns class probabilities.
+  </p>
+
+  <textarea id="textInput" placeholder="اكتب النص العربي هنا...">انا عايز اعرف الاخبار النهارده</textarea>
+
+  <br />
+
+  <button onclick="predictDialect()">Predict</button>
+
+  <div class="examples">
+    <p class="small">Example inputs:</p>
+    <button class="example-btn" onclick="setExample('انا عايز اعرف الاخبار النهارده')">Egyptian-like</button>
+    <button class="example-btn" onclick="setExample('شو بدك تعمل هلق')">Levantine-like</button>
+    <button class="example-btn" onclick="setExample('شلونك وش اخبارك اليوم')">Gulf-like</button>
+    <button class="example-btn" onclick="setExample('واش راك لباس عليك')">North African-like</button>
+    <button class="example-btn" onclick="setExample('أعلنت الحكومة عن قرار جديد اليوم')">MSA-like</button>
+  </div>
+
+  <div id="result" class="result" style="display: none;"></div>
+
+  <div id="feedback" class="result" style="display: none;">
+    <h2>Correct the prediction</h2>
+    <p class="small">
+      If the model prediction is wrong, select the correct dialect and save the example for future retraining.
+    </p>
+
+    <label for="correctLabel"><strong>Correct dialect:</strong></label>
+    <select id="correctLabel">
+      <option value="EGY">EGY - Egyptian Arabic</option>
+      <option value="GLF">GLF - Gulf Arabic</option>
+      <option value="LAV">LAV - Levantine Arabic</option>
+      <option value="MSA">MSA - Modern Standard Arabic</option>
+      <option value="NOR">NOR - North African Arabic</option>
+    </select>
+
+    <button onclick="submitFeedback()">Save correction</button>
+    <p id="feedbackStatus" class="small"></p>
+  </div>
+
+  <script>
+    function setExample(text) {
+      document.getElementById("textInput").value = text;
+    }
+
+    let lastPrediction = null;
+
+    async function predictDialect() {
+      const text = document.getElementById("textInput").value;
+      const resultDiv = document.getElementById("result");
+
+      resultDiv.style.display = "block";
+      resultDiv.innerHTML = "Predicting...";
+
+      try {
+        const response = await fetch("/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ text: text })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          resultDiv.innerHTML = `<strong>Error:</strong> ${errorData.detail}`;
+          return;
+        }
+
+        const data = await response.json();
+        lastPrediction = data;
+
+        document.getElementById("feedback").style.display = "block";
+        document.getElementById("correctLabel").value = data.predicted_dialect;
+        document.getElementById("feedbackStatus").innerHTML = "";
+
+        const sortedProbs = Object.entries(data.class_probabilities)
+          .sort((a, b) => b[1] - a[1]);
+
+        let html = `
+          <h2>Prediction</h2>
+          <div class="dialect">${data.predicted_dialect}</div>
+          <div class="confidence">Confidence: ${(data.probability * 100).toFixed(2)}%</div>
+          <h3>Probability breakdown</h3>
+        `;
+
+        for (const [label, probability] of sortedProbs) {
+          const percent = (probability * 100).toFixed(2);
+
+          html += `
+            <div class="bar-wrapper">
+              <div class="bar-label">
+                <span>${label}</span>
+                <span>${percent}%</span>
+              </div>
+              <div class="bar-bg">
+                <div class="bar-fill" style="width: ${percent}%"></div>
+              </div>
+            </div>
+          `;
+        }
+
+        resultDiv.innerHTML = html;
+      } catch (error) {
+        resultDiv.innerHTML = `<strong>Error:</strong> ${error}`;
+      }
+    }
+
+    async function submitFeedback() {
+      const text = document.getElementById("textInput").value;
+      const correctLabel = document.getElementById("correctLabel").value;
+      const feedbackStatus = document.getElementById("feedbackStatus");
+
+      if (!lastPrediction) {
+        feedbackStatus.innerHTML = "Run a prediction first.";
+        return;
+      }
+
+      feedbackStatus.innerHTML = "Saving correction...";
+
+      try {
+        const response = await fetch("/feedback", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            text: text,
+            predicted_dialect: lastPrediction.predicted_dialect,
+            correct_dialect: correctLabel,
+            model_probability: lastPrediction.probability,
+            class_probabilities: lastPrediction.class_probabilities
+          })
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          feedbackStatus.innerHTML = `<strong>Error:</strong> ${errorData.detail}`;
+          return;
+        }
+
+        const data = await response.json();
+        feedbackStatus.innerHTML = data.message;
+      } catch (error) {
+        feedbackStatus.innerHTML = `<strong>Error:</strong> ${error}`;
+      }
+    }
+  </script>
+</body>
+</html>

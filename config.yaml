@@ -1,0 +1,33 @@
+project:
+  name: arabic_dialect_classification
+  random_state: 42
+
+data:
+  hf_dataset_name: drelhaj/Arabic-Dialects
+  hf_config: full_text
+  text_column: sentence
+  label_column: dialect
+  raw_path: data/raw/arabic_dialect_dataset.csv
+  train_path: data/processed/train.csv
+  val_path: data/processed/val.csv
+  test_path: data/processed/test.csv
+
+model:
+  output_path: models/arabic_dialect_model.joblib
+  analyzer: char
+  ngram_min: 2
+  ngram_max: 5
+  max_features: 50000
+  min_df: 2
+  C: 2.0
+  class_weight: balanced
+  max_iter: 1000
+
+training:
+  metric: f1_macro
+  optuna_trials: 30
+  run_optuna: true
+
+mlflow:
+  experiment_name: arabic_dialect_classification
+  tracking_uri: sqlite:///mlflow.db
