@@ -2,7 +2,7 @@ import argparse
 import re
 
 import pandas as pd
-from datasets import load_dataset
+from datasets import Dataset, load_dataset
 
 from src.config import load_config
 
@@ -14,8 +14,6 @@ def normalize_arabic_text(text: str) -> str:
     Light normalization only.
     We do NOT over-clean dialect text because spelling variation is useful for classification.
     """
-    if not isinstance(text, str):
-        return ""
 
     text = text.strip()
     text = ARABIC_DIACRITICS.sub("", text)
@@ -37,7 +35,7 @@ def normalize_arabic_text(text: str) -> str:
     return text
 
 
-def dataset_split_to_df(split, text_col: str, label_col: str) -> pd.DataFrame:
+def dataset_split_to_df(split: Dataset, text_col: str, label_col: str) -> pd.DataFrame:
     df = pd.DataFrame(split)
     df = df[[text_col, label_col]].copy()
     df.columns = ["text", "label"]
