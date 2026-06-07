@@ -1,17 +1,12 @@
 import argparse
 import re
-from pathlib import Path
 
 import pandas as pd
-import yaml
 from datasets import load_dataset
 
+from src.config import load_config
+
 ARABIC_DIACRITICS = re.compile(r"[\u0617-\u061A\u064B-\u0652]")
-
-
-def load_config(path: str = "config.yaml") -> dict:
-    with open(path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
 
 
 def normalize_arabic_text(text: str) -> str:
@@ -59,10 +54,10 @@ def dataset_split_to_df(split, text_col: str, label_col: str) -> pd.DataFrame:
 def main(config_path: str):
     cfg = load_config(config_path)
 
-    dataset_name = cfg["data"]["hf_dataset_name"]
-    dataset_config = cfg["data"]["hf_config"]
-    text_col = cfg["data"]["text_column"]
-    label_col = cfg["data"]["label_column"]
+    dataset_name = cfg.data.hf_dataset_name
+    dataset_config = cfg.data.hf_config
+    text_col = cfg.data.text_column
+    label_col = cfg.data.label_column
 
     print(f"Loading dataset: {dataset_name}, config={dataset_config}")
     ds = load_dataset(dataset_name, dataset_config)
@@ -82,10 +77,10 @@ def main(config_path: str):
     val_df = dataset_split_to_df(ds[val_split_name], text_col, label_col)
     test_df = dataset_split_to_df(ds["test"], text_col, label_col)
 
-    raw_path = Path(cfg["data"]["raw_path"])
-    train_path = Path(cfg["data"]["train_path"])
-    val_path = Path(cfg["data"]["val_path"])
-    test_path = Path(cfg["data"]["test_path"])
+    raw_path = cfg.data.raw_path
+    train_path = cfg.data.train_path
+    val_path = cfg.data.val_path
+    test_path = cfg.data.test_path
 
     raw_path.parent.mkdir(parents=True, exist_ok=True)
     train_path.parent.mkdir(parents=True, exist_ok=True)

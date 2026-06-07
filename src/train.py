@@ -17,7 +17,7 @@ from sklearn.metrics import (
 )
 from sklearn.pipeline import Pipeline
 
-from src.preprocess import load_config
+from src.config import Config, load_config
 
 
 def build_pipeline(params: dict) -> Pipeline:
@@ -74,7 +74,7 @@ def get_top_features(model: Pipeline, class_names, top_n: int = 20) -> dict:
     return result
 
 
-def objective(trial, cfg, train_df, val_df):
+def objective(trial, cfg: Config, train_df, val_df):
     params = {
         "analyzer": "char",
         "ngram_min": trial.suggest_int("ngram_min", 2, 3),
@@ -85,8 +85,8 @@ def objective(trial, cfg, train_df, val_df):
         "min_df": trial.suggest_int("min_df", 1, 3),
         "C": trial.suggest_float("C", 0.1, 10.0, log=True),
         "class_weight": trial.suggest_categorical("class_weight", [None, "balanced"]),
-        "max_iter": cfg["model"]["max_iter"],
-        "random_state": cfg["project"]["random_state"],
+        "max_iter": cfg.model.max_iter,
+        "random_state": cfg.project.random_state,
     }
 
     if params["ngram_max"] < params["ngram_min"]:
@@ -102,23 +102,23 @@ def objective(trial, cfg, train_df, val_df):
 def main(config_path: str):
     cfg = load_config(config_path)
 
-    train_df = pd.read_csv(cfg["data"]["train_path"])
-    val_df = pd.read_csv(cfg["data"]["val_path"])
-    test_df = pd.read_csv(cfg["data"]["test_path"])
+    train_df = pd.read_csv(cfg.data.train_path)
+    val_df = pd.read_csv(cfg.data.val_path)
+    test_df = pd.read_csv(cfg.data.test_path)
 
-    mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
-    mlflow.set_experiment(cfg["mlflow"]["experiment_name"])
+    mlflow.set_tracking_uri(cfg.mlflow.tracking_uri)
+    mlflow.set_experiment(cfg.mlflow.experiment_name)
 
     base_params = {
-        "analyzer": cfg["model"]["analyzer"],
-        "ngram_min": cfg["model"]["ngram_min"],
-        "ngram_max": cfg["model"]["ngram_max"],
-        "max_features": cfg["model"]["max_features"],
-        "min_df": cfg["model"]["min_df"],
-        "C": cfg["model"]["C"],
-        "class_weight": cfg["model"]["class_weight"],
-        "max_iter": cfg["model"]["max_iter"],
-        "random_state": cfg["project"]["random_state"],
+        "analyzer": cfg.model.analyzer,
+        "ngram_min": cfg.model.ngram_min,
+        "ngram_max": cfg.model.ngram_max,
+        "max_features": cfg.model.max_features,
+        "min_df": cfg.model.min_df,
+        "C": cfg.model.C,
+        "class_weight": cfg.model.class_weight,
+        "max_iter": cfg.model.max_iter,
+        "random_state": cfg.project.random_state,
     }
 
     with mlflow.start_run(run_name="baseline_logreg_char_tfidf"):
@@ -135,11 +135,11 @@ def main(config_path: str):
 
     best_params = base_params.copy()
 
-    if cfg["training"]["run_optuna"]:
+    if cfg.training.run_optuna:
         study = optuna.create_study(direction="maximize")
         study.optimize(
             lambda trial: objective(trial, cfg, train_df, val_df),
-            n_trials=cfg["training"]["optuna_trials"],
+            n_trials=cfg.training.optuna_trials,
         )
 
         best_params.update(study.best_params)
@@ -158,7 +158,7 @@ def main(config_path: str):
         test_metrics = evaluate(final_model, test_df["text"], test_df["label"])
         test_preds = final_model.predict(test_df["text"])
 
-        output_path = Path(cfg["model"]["output_path"])
+        output_path = cfg.model.output_path
         output_path.parent.mkdir(parents=True, exist_ok=True)
         joblib.dump(final_model, output_path)
 

@@ -4,7 +4,7 @@ from collections import Counter
 import pandas as pd
 from sklearn.metrics import accuracy_score, classification_report, f1_score
 
-from src.preprocess import load_config
+from src.config import load_config
 
 EGY_MARKERS = ["مش", "اوي", "عايز", "كده", "ده", "دي", "احنا", "مفيش"]
 GLF_MARKERS = ["شلون", "وايد", "ابي", "ابغى", "وش", "ليش", "هلا", "ترى"]
@@ -31,8 +31,8 @@ def predict_rule(text: str, fallback_label: str) -> str:
 
 def main(config_path: str):
     cfg = load_config(config_path)
-    train_df = pd.read_csv(cfg["data"]["train_path"])
-    test_df = pd.read_csv(cfg["data"]["test_path"])
+    train_df = pd.read_csv(cfg.data.train_path)
+    test_df = pd.read_csv(cfg.data.test_path)
 
     majority_label = Counter(train_df["label"]).most_common(1)[0][0]
 
