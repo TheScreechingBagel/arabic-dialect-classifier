@@ -150,10 +150,15 @@ arabic-dialect-classification/
 │   ├── regex_baseline.py
 │   ├── train.py
 │   └── utils.py
+├── .dvcignore
+├── .gitignore
+├── .python-version
 ├── config.yaml
-├── requirements.txt
+├── dvc.lock
+├── dvc.yaml
+├── pyproject.toml
 ├── README.md
-└── .gitignore
+└── uv.lock
 ```
 
 Generated artifacts are not committed directly to Git:
