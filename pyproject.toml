@@ -12,6 +12,7 @@ dependencies = [
     "joblib>=1.5.3",
     "jupyter>=1.1.1",
     "matplotlib>=3.10.9",
+    "microsoft-python-type-stubs",
     "mlflow>=3.13.0",
     "numpy>=2.4.6",
     "optuna>=4.9.0",
@@ -35,3 +36,6 @@ extend-select = ["I"]
 [tool.basedpyright]
 
 include = ["app", "src"] # not touching the notebook and whatnot
+
+[tool.uv.sources]
+microsoft-python-type-stubs = { git = "https://github.com/microsoft/python-type-stubs.git" }

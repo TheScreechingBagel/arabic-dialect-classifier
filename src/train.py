@@ -7,6 +7,7 @@ import mlflow
 import numpy as np
 import optuna
 import pandas as pd
+from optuna.distributions import CategoricalChoiceType
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
@@ -20,7 +21,7 @@ from sklearn.pipeline import Pipeline
 from src.config import Config, load_config
 
 
-def build_pipeline(params: dict) -> Pipeline:
+def build_pipeline(params: dict[str, CategoricalChoiceType]) -> Pipeline:
     vectorizer = TfidfVectorizer(
         analyzer=params["analyzer"],
         ngram_range=(params["ngram_min"], params["ngram_max"]),
@@ -44,7 +45,7 @@ def build_pipeline(params: dict) -> Pipeline:
     )
 
 
-def evaluate(model: Pipeline, X, y) -> dict:
+def evaluate(model: Pipeline, X: pd.Series, y: pd.Series):
     preds = model.predict(X)
     return {
         "accuracy": accuracy_score(y, preds),
@@ -74,7 +75,9 @@ def get_top_features(model: Pipeline, class_names, top_n: int = 20) -> dict:
     return result
 
 
-def objective(trial, cfg: Config, train_df, val_df):
+def objective(
+    trial: optuna.Trial, cfg: Config, train_df: pd.DataFrame, val_df: pd.DataFrame
+):
     params = {
         "analyzer": "char",
         "ngram_min": trial.suggest_int("ngram_min", 2, 3),
