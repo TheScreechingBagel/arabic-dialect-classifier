@@ -34,4 +34,4 @@ extend-select = ["I"]
 
 [tool.basedpyright]
 
-include = ["app"] # not touching the notebook and whatnot
+include = ["app", "src"] # not touching the notebook and whatnot

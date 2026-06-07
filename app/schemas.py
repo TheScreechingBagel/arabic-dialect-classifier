@@ -1,5 +1,3 @@
-from typing import Dict, Optional
-
 from pydantic import BaseModel, Field
 
 
@@ -15,7 +13,7 @@ class PredictionRequest(BaseModel):
 class PredictionResponse(BaseModel):
     predicted_dialect: str = Field(..., examples=["EGY"])
     probability: float = Field(..., examples=[0.82])
-    class_probabilities: Dict[str, float] = Field(
+    class_probabilities: dict[str, float] = Field(
         ...,
         examples=[
             {
@@ -46,12 +44,12 @@ class FeedbackRequest(BaseModel):
         examples=["LAV"],
         description="Human-corrected dialect label.",
     )
-    model_probability: Optional[float] = Field(
+    model_probability: float | None = Field(
         default=None,
         examples=[0.61],
         description="Probability assigned to the predicted class by the model.",
     )
-    class_probabilities: Optional[Dict[str, float]] = Field(
+    class_probabilities: dict[str, float] | None = Field(
         default=None,
         examples=[
             {
