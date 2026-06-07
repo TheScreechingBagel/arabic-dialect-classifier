@@ -17,7 +17,6 @@ from app.schemas import (
 )
 from src.preprocess import normalize_arabic_text
 
-
 MODEL_PATH = Path("models/arabic_dialect_model.joblib")
 FEEDBACK_PATH = Path("data/feedback/labeled_feedback.csv")
 ALLOWED_LABELS = {"EGY", "GLF", "LAV", "MSA", "NOR"}
@@ -29,7 +28,9 @@ app = FastAPI(
 )
 
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
-app.mount("/resources", StaticFiles(directory="resources"), name="resources") # for da cat image
+app.mount(
+    "/resources", StaticFiles(directory="resources"), name="resources"
+)  # for da cat image
 
 model = None
 
@@ -59,7 +60,9 @@ def predict(request: PredictionRequest):
     clean_text = normalize_arabic_text(request.text)
 
     if not clean_text:
-        raise HTTPException(status_code=400, detail="Text is empty after preprocessing.")
+        raise HTTPException(
+            status_code=400, detail="Text is empty after preprocessing."
+        )
 
     predicted_label = model.predict([clean_text])[0]
 
@@ -67,8 +70,7 @@ def predict(request: PredictionRequest):
         probabilities = model.predict_proba([clean_text])[0]
         classes = model.named_steps["clf"].classes_
         class_probs = {
-            str(label): float(prob)
-            for label, prob in zip(classes, probabilities)
+            str(label): float(prob) for label, prob in zip(classes, probabilities)
         }
         probability = float(np.max(probabilities))
     else:
@@ -89,7 +91,9 @@ def save_feedback(request: FeedbackRequest):
     predicted_label = request.predicted_dialect.strip().upper()
 
     if not text:
-        raise HTTPException(status_code=400, detail="Text is empty after preprocessing.")
+        raise HTTPException(
+            status_code=400, detail="Text is empty after preprocessing."
+        )
 
     if correct_label not in ALLOWED_LABELS:
         raise HTTPException(

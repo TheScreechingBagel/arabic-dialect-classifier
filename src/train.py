@@ -9,7 +9,12 @@ import optuna
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score, f1_score, classification_report, confusion_matrix
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+)
 from sklearn.pipeline import Pipeline
 
 from src.preprocess import load_config
@@ -31,10 +36,12 @@ def build_pipeline(params: dict) -> Pipeline:
         random_state=params["random_state"],
     )
 
-    return Pipeline([
-        ("tfidf", vectorizer),
-        ("clf", model),
-    ])
+    return Pipeline(
+        [
+            ("tfidf", vectorizer),
+            ("clf", model),
+        ]
+    )
 
 
 def evaluate(model: Pipeline, X, y) -> dict:
@@ -72,7 +79,9 @@ def objective(trial, cfg, train_df, val_df):
         "analyzer": "char",
         "ngram_min": trial.suggest_int("ngram_min", 2, 3),
         "ngram_max": trial.suggest_int("ngram_max", 4, 6),
-        "max_features": trial.suggest_categorical("max_features", [20000, 50000, 80000]),
+        "max_features": trial.suggest_categorical(
+            "max_features", [20000, 50000, 80000]
+        ),
         "min_df": trial.suggest_int("min_df", 1, 3),
         "C": trial.suggest_float("C", 0.1, 10.0, log=True),
         "class_weight": trial.suggest_categorical("class_weight", [None, "balanced"]),
@@ -169,7 +178,9 @@ def main(config_path: str):
 
         top_features = get_top_features(final_model, class_names, top_n=20)
 
-        with open(reports_dir / "classification_report.json", "w", encoding="utf-8") as f:
+        with open(
+            reports_dir / "classification_report.json", "w", encoding="utf-8"
+        ) as f:
             json.dump(report, f, ensure_ascii=False, indent=2)
 
         with open(reports_dir / "confusion_matrix.json", "w", encoding="utf-8") as f:

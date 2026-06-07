@@ -2,10 +2,9 @@ import argparse
 from collections import Counter
 
 import pandas as pd
-from sklearn.metrics import accuracy_score, f1_score, classification_report
+from sklearn.metrics import accuracy_score, classification_report, f1_score
 
 from src.preprocess import load_config
-
 
 EGY_MARKERS = ["مش", "اوي", "عايز", "كده", "ده", "دي", "احنا", "مفيش"]
 GLF_MARKERS = ["شلون", "وايد", "ابي", "ابغى", "وش", "ليش", "هلا", "ترى"]

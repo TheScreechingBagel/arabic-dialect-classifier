@@ -6,7 +6,6 @@ import pandas as pd
 import yaml
 from datasets import load_dataset
 
-
 ARABIC_DIACRITICS = re.compile(r"[\u0617-\u061A\u064B-\u0652]")
 
 
@@ -76,7 +75,9 @@ def main(config_path: str):
     elif "dev" in ds:
         val_split_name = "dev"
     else:
-        raise ValueError(f"No validation/dev split found. Available splits: {list(ds.keys())}")
+        raise ValueError(
+            f"No validation/dev split found. Available splits: {list(ds.keys())}"
+        )
 
     val_df = dataset_split_to_df(ds[val_split_name], text_col, label_col)
     test_df = dataset_split_to_df(ds["test"], text_col, label_col)
